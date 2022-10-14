@@ -1,0 +1,22 @@
+﻿  CMLPR.cpp
+F:\FG Projects\CMLPR\CMLPR\CMLPR.cpp(21,31): warning C4267: 'argument': conversion from 'size_t' to 'int', possible loss of data
+F:\FG Projects\CMLPR\CMLPR\CMLPR.cpp(22,35): warning C4267: 'argument': conversion from 'size_t' to 'int', possible loss of data
+F:\FG Projects\CMLPR\CMLPR\CMLPR.cpp(23,35): warning C4267: 'argument': conversion from 'size_t' to 'int', possible loss of data
+F:\FG Projects\CMLPR\CMLPR\CMLPR.cpp(25,32): warning C4267: 'argument': conversion from 'size_t' to 'int', possible loss of data
+F:\FG Projects\CMLPR\CMLPR\CMLPR.cpp(41,31): warning C4267: 'argument': conversion from 'size_t' to 'int', possible loss of data
+F:\FG Projects\CMLPR\CMLPR\CMLPR.cpp(42,35): warning C4267: 'argument': conversion from 'size_t' to 'int', possible loss of data
+F:\FG Projects\CMLPR\CMLPR\CMLPR.cpp(43,35): warning C4267: 'argument': conversion from 'size_t' to 'int', possible loss of data
+F:\FG Projects\CMLPR\CMLPR\CMLPR.cpp(47,35): warning C4267: 'argument': conversion from 'size_t' to 'int', possible loss of data
+F:\FG Projects\CMLPR\CMLPR\CMLPR.cpp(63,7): warning C4267: 'argument': conversion from 'size_t' to 'int', possible loss of data
+F:\FG Projects\CMLPR\CMLPR\CMLPR.cpp(64,26): warning C4267: 'argument': conversion from 'size_t' to 'int', possible loss of data
+F:\FG Projects\CMLPR\CMLPR\CMLPR.cpp(80,28): warning C4267: 'argument': conversion from 'size_t' to 'int', possible loss of data
+F:\FG Projects\CMLPR\CMLPR\CMLPR.cpp(80,57): warning C4267: 'argument': conversion from 'size_t' to 'int', possible loss of data
+F:\FG Projects\CMLPR\CMLPR\CMLPR.cpp(95,35): warning C4267: 'argument': conversion from 'size_t' to 'int', possible loss of data
+F:\FG Projects\CMLPR\CMLPR\CMLPR.cpp(98,24): warning C4267: 'argument': conversion from 'size_t' to 'int', possible loss of data
+F:\FG Projects\CMLPR\CMLPR\CMLPR.cpp(156,15): warning C4244: 'initializing': conversion from 'double' to 'int', possible loss of data
+  Generating code
+  2 of 93 functions ( 2.2%) were compiled, the rest were copied from previous compilation.
+    0 functions were new in current compilation
+    0 functions had inline decision re-evaluated but remain unchanged
+  Finished generating code
+  CMLPR.vcxproj -> F:\FG Projects\CMLPR\x64\Release\CMLPR.exe
