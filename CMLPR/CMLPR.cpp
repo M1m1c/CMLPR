@@ -223,30 +223,23 @@ Mat Min(Mat Grey, int neighbirSize)
 
 Mat Edge(Mat Grey, int th)
 {
-	Mat edge = Mat::zeros(Grey.size(), CV_8UC1);
-
-	for (int i = th; i < Grey.rows - th; i++)
+	Mat EdgeImg = Mat::zeros(Grey.size(), CV_8UC1);
+	for (int i = 1; i < Grey.rows - 1; i++)
 	{
-		for (int j = th; j < Grey.cols - th; j++)
+		for (int j = 1; j < Grey.cols - 1; j++)
 		{
-			/*int sum = 0;
-			int count = 0;
-			for (int ii = -th; ii <= th; ii+=th*2)
-			{
-				for (int jj = -th; jj <= th; jj+=th*2)
-				{
-					count++;
-					sum += Grey.at<uchar>(i + ii, j + jj);
-				}
-			}
-			edge.at<uchar>(i, j) = sum / count;*/
-			int avgL = Grey.at<uchar>(i -1, j +1) + Grey.at<uchar>(i - 1, j) + Grey.at<uchar>(i - 1, j - 1);
-			int avgR = Grey.at<uchar>(i + 1, j + 1) + Grey.at<uchar>(i + 1, j) + Grey.at<uchar>(i + 1, j - 1);
-			if (std::abs(avgL - avgR) > th)
-				edge.at<uchar>(i, j) = 255;
+			int AvgL = (Grey.at<uchar>(i - 1, j - 1) + Grey.at<uchar>(i, j - 1) + Grey.at<uchar>(i + 1, j - 1)) / 3;
+			int AvgR = (Grey.at<uchar>(i - 1, j + 1) + Grey.at<uchar>(i, j + 1) + Grey.at<uchar>(i + 1, j + 1)) / 3;
+			if (abs(AvgL - AvgR) > th)
+				EdgeImg.at<uchar>(i, j) = 255;
+
+
 		}
 	}
-	return edge;
+
+	return EdgeImg;
+
+
 }
 
 
@@ -274,7 +267,7 @@ int main()
 	auto max = Max(gray, 3);
 	imshow("gray Image Max", max);
 
-	auto edge = Edge(gray, 80);
+	auto edge = Edge(gray, 50);
 	imshow("gray Image Edge", edge);
 
 	waitKey();
