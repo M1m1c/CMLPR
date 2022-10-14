@@ -246,7 +246,7 @@ Mat Edge(Mat Grey, int th)
 int main()
 {
 	Mat img;
-	img = imread("C:\\Users\\L B O\\Downloads\\1.jpg");
+	img = imread("INSERT DIRECTORY TO IMAGE");
 	imshow("RGB Image", img);
 
 	auto gray = RGBToGray(img);
