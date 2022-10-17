@@ -243,10 +243,82 @@ Mat Edge(Mat Grey, int th)
 }
 
 
+Mat Dialation(Mat edge, int neighbirSize)
+{
+
+	Mat dialation = Mat::zeros(edge.size(), CV_8UC1);
+
+	for (int i = neighbirSize; i < edge.rows - neighbirSize; i++)
+	{
+		for (int j = neighbirSize; j < edge.cols - neighbirSize; j++)
+		{
+			auto isPixelBlack = edge.at<uchar>(i, j) == 0;
+			if (!isPixelBlack)
+			{
+				dialation.at<uchar>(i, j) = 255;
+				continue;
+			}
+
+			for (int ii = -neighbirSize; ii <= neighbirSize; ii++)
+			{
+				for (int jj = -neighbirSize; jj <= neighbirSize; jj++)
+				{
+					auto isNeighbourWhite = edge.at<uchar>(i + ii, j + jj) == 255;
+					if (isNeighbourWhite)
+					{
+						dialation.at<uchar>(i, j) = 255;
+						break;
+					}
+
+				}
+			}
+		}
+	}
+
+	return dialation;
+}
+
+Mat Erosion(Mat edge, int neighbirSize)
+{
+
+	Mat erosion = Mat::zeros(edge.size(), CV_8UC1);
+
+	for (int i = neighbirSize; i < edge.rows - neighbirSize; i++)
+	{
+		for (int j = neighbirSize; j < edge.cols - neighbirSize; j++)
+		{
+
+			erosion.at<uchar>(i, j) = 255;
+			auto isPixelWhite = edge.at<uchar>(i, j) == 255;
+			if (!isPixelWhite)
+			{
+				erosion.at<uchar>(i, j) = 0;
+				continue;
+			}
+
+			for (int ii = -neighbirSize; ii <= neighbirSize; ii++)
+			{
+				for (int jj = -neighbirSize; jj <= neighbirSize; jj++)
+				{
+					auto isNeighbourBlack = edge.at<uchar>(i + ii, j + jj) == 0;
+					if (isNeighbourBlack)
+					{
+						erosion.at<uchar>(i, j) = 0;
+						break;
+					}
+
+				}
+			}
+		}
+	}
+
+	return erosion;
+}
+
 int main()
 {
 	Mat img;
-	img = imread("INSERT DIRECTORY TO IMAGE");
+	img = imread("C:\\Users\\L B O\\Downloads\\1.jpg");
 	imshow("RGB Image", img);
 
 	auto gray = RGBToGray(img);
@@ -267,8 +339,15 @@ int main()
 	auto max = Max(gray, 3);
 	imshow("gray Image Max", max);
 
-	auto edge = Edge(gray, 50);
-	imshow("gray Image Edge", edge);
+	auto edge = Edge(average, 50);
+	imshow("Edge", edge);
+
+	auto erosion = Erosion(edge, 1);
+	imshow("Erosion", erosion);
+
+	auto dialation = Dialation(erosion, 15);
+	imshow("Dialation", dialation);
+
 
 	waitKey();
 	std::cout << "Hello World!\n";
