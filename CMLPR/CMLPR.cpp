@@ -8,6 +8,7 @@
 #include "CMLPR.h"
 
 using namespace cv;
+using namespace std;
 
 Mat RGBToGray(Mat rgb)
 {
@@ -343,6 +344,54 @@ int main()
 	auto dialation = Dialation(erosion, 15);
 	imshow("Dialation", dialation);
 
+
+	Mat DilatedImgCpy;
+	DilatedImgCpy = dialation.clone();
+	vector<vector<Point>> contours1;
+	vector<Vec4i> hierachy1;
+	findContours(dialation, contours1, hierachy1, RETR_EXTERNAL, CHAIN_APPROX_NONE, Point(0, 0));
+	Mat dst = Mat::zeros(gray.size(), CV_8UC3);
+
+	if (!contours1.empty())
+	{
+		for (int i = 0; i < contours1.size(); i++)
+		{
+			Scalar colour((rand() & 255), (rand() & 255), (rand() & 255));
+			drawContours(dst, contours1, i, colour, -1, 8, hierachy1);
+		}
+	}
+	imshow("Segmented Image", dst);
+	
+	
+
+	Rect rect;
+	Mat plate;
+	Scalar black = CV_RGB(0, 0, 0);
+	for (int i = 0; i < contours1.size(); i++)
+	{
+		rect = boundingRect(contours1[i]);
+
+		auto ratio = (float)rect.width / (float)rect.height;
+
+		auto tooTall = rect.height > 100;
+		auto tooWide = rect.width < 50 || rect.width > 400;
+		auto  outsideFocusX = rect.x < 0.1 * DilatedImgCpy.cols || rect.x > 0.9 * DilatedImgCpy.cols;
+		auto  outsideFocusY = rect.y < 0.1 * DilatedImgCpy.rows || rect.y > 0.9 * DilatedImgCpy.rows;
+		if ( tooTall || tooWide|| outsideFocusX || outsideFocusY || ratio < 1.5f)
+		{
+			drawContours(DilatedImgCpy, contours1, i, black, -1, 8, hierachy1);
+		}
+		else
+		{
+			plate = gray(rect);
+		}
+
+	}
+
+	imshow("Filtered Image", DilatedImgCpy);
+
+	if (plate.cols != 0 && plate.rows != 0)
+		imshow("detected plate", plate);
 
 	waitKey();
 	std::cout << "Hello World!\n";
