@@ -252,12 +252,7 @@ Mat Dialation(Mat edge, int neighbirSize)
 	{
 		for (int j = neighbirSize; j < edge.cols - neighbirSize; j++)
 		{
-			auto isPixelBlack = edge.at<uchar>(i, j) == 0;
-			if (!isPixelBlack)
-			{
-				dialation.at<uchar>(i, j) = 255;
-				continue;
-			}
+			bool shouldBreak = false;
 
 			for (int ii = -neighbirSize; ii <= neighbirSize; ii++)
 			{
@@ -267,10 +262,13 @@ Mat Dialation(Mat edge, int neighbirSize)
 					if (isNeighbourWhite)
 					{
 						dialation.at<uchar>(i, j) = 255;
+						shouldBreak = true;
 						break;
 					}
 
 				}
+
+				if (shouldBreak) { break; }
 			}
 		}
 	}
@@ -288,13 +286,8 @@ Mat Erosion(Mat edge, int neighbirSize)
 		for (int j = neighbirSize; j < edge.cols - neighbirSize; j++)
 		{
 
-			erosion.at<uchar>(i, j) = 255;
-			auto isPixelWhite = edge.at<uchar>(i, j) == 255;
-			if (!isPixelWhite)
-			{
-				erosion.at<uchar>(i, j) = 0;
-				continue;
-			}
+			erosion.at<uchar>(i, j) = edge.at<uchar>(i, j);
+			bool shouldBreak = false;
 
 			for (int ii = -neighbirSize; ii <= neighbirSize; ii++)
 			{
@@ -304,10 +297,12 @@ Mat Erosion(Mat edge, int neighbirSize)
 					if (isNeighbourBlack)
 					{
 						erosion.at<uchar>(i, j) = 0;
+						shouldBreak = true;
 						break;
 					}
 
 				}
+				if (shouldBreak) { break; }
 			}
 		}
 	}
