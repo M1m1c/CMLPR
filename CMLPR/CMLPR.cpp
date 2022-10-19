@@ -2,6 +2,9 @@
 //
 
 #include <iostream>
+#include <baseapi.h>
+#include <allheaders.h>
+
 #include "core/core.hpp"
 #include "highgui/highgui.hpp"
 #include "opencv2/opencv.hpp"
