@@ -314,6 +314,90 @@ Mat Erosion(Mat edge, int neighbirSize)
 	return erosion;
 }
 
+Mat EqHist(Mat gray)
+{
+	Mat eqImg = Mat::zeros(gray.size(), CV_8UC1);
+
+	int count[256] = { 0 };
+	for (size_t i = 0; i < gray.rows; i++)
+	{
+		for (size_t j = 0; j < gray.cols; j++)
+		{
+			count[gray.at<uchar>(i, j)]++;
+		}
+	}
+
+	float prob[256] = { 0.0 };
+	for (size_t i = 0; i < 256; i++)
+	{
+		prob[i] = (float)count[i] / (float)(gray.rows * gray.cols);
+	}
+
+	float accprob[256] = { 0.0 };
+	accprob[0] = prob[0];
+	for (size_t i = 1; i < 256; i++)
+	{
+		accprob[i] = prob[i] + accprob[i - 1];
+	}
+
+	float newValue[256] = { 0.0 };
+	for (size_t i = 0; i < 256; i++)
+	{
+		newValue[i] = 255 * accprob[i];
+	}
+
+	for (size_t i = 0; i < gray.rows; i++)
+	{
+		for (size_t j = 0; j < gray.cols; j++)
+		{
+			eqImg.at<uchar>(i, j) = newValue[gray.at<uchar>(i, j)];
+		}
+	}
+	return eqImg;
+}
+
+int OTSU(Mat Grey)
+{
+	int count[256] = { 0 };
+	for (int i = 0; i < Grey.rows; i++)
+		for (int j = 0; j < Grey.cols; j++)
+			count[Grey.at<uchar>(i, j)]++;
+
+
+	// prob
+	float prob[256] = { 0.0 };
+	for (int i = 0; i < 256; i++)
+		prob[i] = (float)count[i] / (float)(Grey.rows * Grey.cols);
+
+	// accprob
+	float theta[256] = { 0.0 };
+	theta[0] = prob[0];
+	for (int i = 1; i < 256; i++)
+		theta[i] = prob[i] + theta[i - 1];
+
+	float meu[256] = { 0.0 };
+	for (int i = 1; i < 256; i++)
+		meu[i] = i * prob[i] + meu[i - 1];
+
+	float sigma[256] = { 0.0 };
+	for (int i = 0; i < 256; i++)
+		sigma[i] = pow(meu[255] * theta[i] - meu[i], 2) / (theta[i] * (1 - theta[i]));
+
+	int index = 0;
+	float maxVal = 0;
+	for (int i = 0; i < 256; i++)
+	{
+		if (sigma[i] > maxVal)
+		{
+			maxVal = sigma[i];
+			index = i;
+		}
+	}
+
+	return index + 30;
+}
+
+
 int main()
 {
 	Mat img;
