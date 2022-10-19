@@ -38,6 +38,8 @@
 *.tlog
 *.ipch
 
+**/vcpkg
+
 **/opencv
 .vs/CMLPR/v17/.suo
 .vs/CMLPR/v17/Browse.VC.db
