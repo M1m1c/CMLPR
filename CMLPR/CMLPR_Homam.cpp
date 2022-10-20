@@ -353,7 +353,7 @@ int OTSU(Mat Grey)
 
 }
 
-int main()
+void mainHomam()
 {
     Mat img;
     img = imread("C:\\Users\\mokham\\Documents\\1.jpg");
