@@ -338,6 +338,30 @@ Mat EraseBorder(Mat edge, int borderX, int borderY)
 }
 
 
+int ContrastValue(int value)
+{
+	float f = value;
+	f /= 255.f;
+
+	f = pow(f, 3.5f);
+	f *= 255.f;
+	return (int)f;
+}
+
+Mat ContrastImg(Mat img)
+{
+	Mat retval = Mat::zeros(img.size(), CV_8UC1);
+	for (int i = 0; i < img.rows; i++)
+	{
+		for (int j = 0; j < img.cols; j++)
+		{
+			int val = ContrastValue(img.at<uchar>(i, j));
+			img.at<uchar>(i, j) = val;
+		}
+	}
+	return img;
+}
+
 Mat EqHist(Mat gray)
 {
 	Mat eqImg = Mat::zeros(gray.size(), CV_8UC1);
@@ -556,11 +580,16 @@ Mat LocateLicensePlate(Mat image)
 	return plate;
 }
 
-string ProcessLicensePlate(Mat plate)
+string ProcessLicensePlate(Mat plate, int i)
 {
-	string str = "";
+	string str = "NO LETTERS DETECTED!";
 
-	plate = EqHist(plate);
+	//TODO linear remapping
+
+	plate = ContrastImg(plate);
+	imshow("funcPlate", plate);
+
+	//plate = EqHist(plate);
 
 	int OTSUTH = OTSU(plate);
 
@@ -568,6 +597,10 @@ string ProcessLicensePlate(Mat plate)
 
 	BinPlate = EraseBorder(BinPlate, ((float)BinPlate.cols * 0.05f), ((float)BinPlate.rows * 0.20f));
 	
+
+	//BinPlate = Dialation(BinPlate, 1);
+	//imshow("BinPlate", BinPlate);
+	imshow(to_string(i + 1), BinPlate);
 	tesseract::TessBaseAPI* api = new tesseract::TessBaseAPI();
 
 	api->Init("..\\tessdata", "eng");
@@ -590,6 +623,7 @@ string ProcessLicensePlate(Mat plate)
 		str.erase(remove(str.begin(), str.end(), '}'), str.end());
 		str.erase(remove(str.begin(), str.end(), '"'), str.end());
 		str.erase(remove(str.begin(), str.end(), '_'), str.end());
+		str.erase(remove(str.begin(), str.end(), '	'), str.end());
 	}
 	api->End();
 	delete[] outText;
@@ -630,8 +664,8 @@ int main()
 		string str = "PLATE NOT FOUND!";
 		if (plate.cols != 0 && plate.rows != 0)
 		{
-			str = ProcessLicensePlate(plate);
-			imshow(to_string(i+1), plate);
+			str = ProcessLicensePlate(plate, i);
+			//imshow(to_string(i+1), plate);
 		}
 		cout << i+1 << ": " << str << endl;//ProcessLicensePlate(plate);
 	}
