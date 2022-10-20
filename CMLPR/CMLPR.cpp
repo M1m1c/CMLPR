@@ -401,6 +401,8 @@ int OTSU(Mat Grey)
 
 	return index + 30;
 }
+
+
 void showAll()
 {
 	Mat images[20];
@@ -461,6 +463,7 @@ void showAll()
 			auto tooWide = rect.width < 70 || rect.width > 400;
 			auto  outsideFocusX = rect.x < 0.15 * DilatedImgCpy.cols || rect.x > 0.85 * DilatedImgCpy.cols;
 			auto  outsideFocusY = rect.y < 0.3 * DilatedImgCpy.rows || rect.y > 0.85 * DilatedImgCpy.rows;
+			
 			if ( tooTall || tooWide|| outsideFocusX || outsideFocusY || ratio < 1.5f)
 			{
 				drawContours(DilatedImgCpy, contours1, i, black, -1, 8, hierachy1);
@@ -481,16 +484,42 @@ void showAll()
 	}
 
 }
+
+float WhiteRatio(Mat image, Rect rect)
+{
+	int sum = 0;
+	for (int i = 0; i < rect.width; ++i)
+	{
+		for (int j = 0; j < rect.height; ++j)
+		{
+			if (image.at<uchar>(i, j))
+			{
+				sum++;
+			}
+		}
+	}
+	int pixelsInRect = rect.width * rect.height;
+	float result = sum / float(pixelsInRect);
+	return result;
+}
+
+
+
+
+
 // 8, 10, 14, 16, 18, 20
 int main()
 {
-	Mat image = imread("..\\Dataset\\20.jpg");
+	Mat image = imread("..\\Dataset\\8.jpg");
 
 	Mat gray = RGBToGray(image);
 	imshow("Grey image", gray);
 	
 	auto average = AverageNxN(gray, 1);
-	// imshow("gray Image average", average);
+	imshow("gray Image average", average);
+	
+	Mat EQImg = EqHist(average);
+	imshow("EQ Grey image", EQImg);
 	
 	auto edge = Edge(average, 50);
 	imshow("Edge", edge);
@@ -501,9 +530,6 @@ int main()
 	auto dialation = Dialation(erosion, 5);
 	imshow("Dialation", dialation);
 	
-	
-	// Mat EQImg = EqHist(gray);
-	// imshow("EQ Grey image", EQImg);
 	// auto binary = GrayToBinary(gray);
 	// imshow("binary Image", binary);
 
@@ -543,15 +569,17 @@ int main()
 	{
 		rect = boundingRect(contours1[i]);
 
-		auto ratio = (float)rect.width / (float)rect.height;
-
-		auto tooTall = rect.height > 100;
-		auto tooWide = rect.width < 70 || rect.width > 400;
-		auto  outsideFocusX = rect.x < 0.15 * DilatedImgCpy.cols || rect.x > 0.85 * DilatedImgCpy.cols;
-		auto  outsideFocusY = rect.y < 0.3 * DilatedImgCpy.rows || rect.y > 0.85 * DilatedImgCpy.rows;
-		if ( tooTall || tooWide|| outsideFocusX || outsideFocusY || ratio < 1.5f)
+		float whiteRatio = WhiteRatio(DilatedImgCpy(rect), rect);
+		bool ratio = (float)rect.width / (float)rect.height;
+		bool tooTall = rect.height > 100;
+		bool tooWide = rect.width < 70 || rect.width > 400;
+		bool outsideFocusX = rect.x < 0.15 * DilatedImgCpy.cols || rect.x > 0.85 * DilatedImgCpy.cols;
+		bool outsideFocusY = rect.y < 0.3 * DilatedImgCpy.rows || rect.y > 0.85 * DilatedImgCpy.rows;
+		bool tooMuchBlack = whiteRatio < 0.95f;
+		std::cout << whiteRatio << string(tooMuchBlack ? " Remove" : " KEEP") << " | " << std::endl;;
+		if (tooTall || tooWide|| outsideFocusX || outsideFocusY || ratio < 1.5f || tooMuchBlack)
 		{
-			drawContours(DilatedImgCpy, contours1, i, black, -1, 8, hierachy1);
+				drawContours(DilatedImgCpy, contours1, i, black, -1, 8, hierachy1);
 		}
 		else
 		{
