@@ -258,7 +258,7 @@ Mat Dialation(Mat edge, int neighbirSize)
 		{
 			bool shouldBreak = false;
 
-			for (int ii = -neighbirSize; ii <= neighbirSize; ii++)
+			for (int ii = -4; ii <= 4; ii++)
 			{
 				for (int jj = -neighbirSize; jj <= neighbirSize; jj++)
 				{
@@ -289,7 +289,7 @@ Mat Erosion(Mat edge, int neighbirSize)
 	{
 		for (int j = neighbirSize; j < edge.cols - neighbirSize; j++)
 		{
-
+			int blackNeighbors = 0;
 			erosion.at<uchar>(i, j) = edge.at<uchar>(i, j);
 			bool shouldBreak = false;
 
@@ -300,13 +300,18 @@ Mat Erosion(Mat edge, int neighbirSize)
 					auto isNeighbourBlack = edge.at<uchar>(i + ii, j + jj) == 0;
 					if (isNeighbourBlack)
 					{
-						erosion.at<uchar>(i, j) = 0;
-						shouldBreak = true;
-						break;
+						blackNeighbors++;
+						// erosion.at<uchar>(i, j) = 0;
+						// shouldBreak = true;
+						// break;
 					}
 
 				}
-				if (shouldBreak) { break; }
+				// if (shouldBreak) { break; }
+			}
+			if (blackNeighbors > 3)
+			{
+				erosion.at<uchar>(i, j) = 0;
 			}
 		}
 	}
@@ -396,40 +401,120 @@ int OTSU(Mat Grey)
 
 	return index + 30;
 }
-
-
-int main()
+void showAll()
 {
+	Mat images[20];
+	images[0] = imread("..\\Dataset\\1.jpg");
+	images[1] = imread("..\\Dataset\\2.jpg");
+	images[2] = imread("..\\Dataset\\3.jpg");
+	images[3] = imread("..\\Dataset\\4.jpg");
+	images[4] = imread("..\\Dataset\\5.jpg");
+	images[5] = imread("..\\Dataset\\6.jpg");
+	images[6] = imread("..\\Dataset\\7.jpg");
+	images[7] = imread("..\\Dataset\\8.jpg");
+	images[8] = imread("..\\Dataset\\9.jpg");
+	images[9] = imread("..\\Dataset\\10.jpg");
+	images[10] = imread("..\\Dataset\\11.jpg");
+	images[11] = imread("..\\Dataset\\12.jpg");
+	images[12] = imread("..\\Dataset\\13.jpg");
+	images[13] = imread("..\\Dataset\\14.jpg");
+	images[14] = imread("..\\Dataset\\15.jpg");
+	images[15] = imread("..\\Dataset\\16.jpg");
+	images[16] = imread("..\\Dataset\\17.jpg");
+	images[17] = imread("..\\Dataset\\18.jpg");
+	images[18] = imread("..\\Dataset\\19.jpg");
+	images[19] = imread("..\\Dataset\\20.jpg");
+	
 	Mat img;
-	img = imread("C:\\Users\\L B O\\Downloads\\1.jpg");
-	imshow("RGB Image", img);
+	img = imread("..\\Dataset\\8.jpg");
+	// imshow("RGB Image", img);
 
 	auto gray = RGBToGray(img);
-	imshow("gray Image", gray);
+	// imshow("gray Image", gray);
 
-	auto binary = GrayToBinary(gray);
-	imshow("binary Image", binary);
+	for (int i = 0; i < 20; i++)
+	{
+		Mat image = images[i];
+		image = RGBToGray(image);
+		Mat avg = AverageNxN(image, 1);
+		Mat edge = Edge(avg, 50);
+		Mat eroded = Erosion(edge, 1);
+		Mat dilated = Dialation(eroded, 5);
 
-	auto inversion = GrayInversion(gray);
-	imshow("gray Image Inverted", inversion);
+		Mat DilatedImgCpy;
+		DilatedImgCpy = dilated.clone();
+		vector<vector<Point>> contours1;
+		vector<Vec4i> hierachy1;
+		findContours(dilated, contours1, hierachy1, RETR_EXTERNAL, CHAIN_APPROX_NONE, Point(0, 0));
+		Mat dst = Mat::zeros(gray.size(), CV_8UC3);
 
-	auto step = GrayStep(gray);
-	imshow("gray Image Step", step);
+		Rect rect;
+		Mat plate;
+		Scalar black = CV_RGB(0, 0, 0);
+		for (int ii = 0; ii < contours1.size(); ii++)
+		{
+			rect = boundingRect(contours1[i]);
 
-	auto average = AverageNxN(gray, 3);
-	imshow("gray Image average", average);
+			auto ratio = (float)rect.width / (float)rect.height;
 
-	auto max = Max(gray, 3);
-	imshow("gray Image Max", max);
+			auto tooTall = rect.height > 100;
+			auto tooWide = rect.width < 70 || rect.width > 400;
+			auto  outsideFocusX = rect.x < 0.15 * DilatedImgCpy.cols || rect.x > 0.85 * DilatedImgCpy.cols;
+			auto  outsideFocusY = rect.y < 0.3 * DilatedImgCpy.rows || rect.y > 0.85 * DilatedImgCpy.rows;
+			if ( tooTall || tooWide|| outsideFocusX || outsideFocusY || ratio < 1.5f)
+			{
+				drawContours(DilatedImgCpy, contours1, i, black, -1, 8, hierachy1);
+			}
+			else
+			{
+				plate = gray(rect);
+			}
 
+		}
+		string title = std::to_string(i);
+		imshow(title,dilated);
+		// imshow("Filtered Image ", DilatedImgCpy);
+
+		title += title;
+		if (plate.cols != 0 && plate.rows != 0)
+			imshow(title, plate);
+	}
+
+}
+// 8, 10, 14, 16, 18, 20
+int main()
+{
+	Mat image = imread("..\\Dataset\\20.jpg");
+
+	Mat gray = RGBToGray(image);
+	imshow("Grey image", gray);
+	
+	auto average = AverageNxN(gray, 1);
+	// imshow("gray Image average", average);
+	
 	auto edge = Edge(average, 50);
 	imshow("Edge", edge);
 
 	auto erosion = Erosion(edge, 1);
 	imshow("Erosion", erosion);
 
-	auto dialation = Dialation(erosion, 15);
+	auto dialation = Dialation(erosion, 5);
 	imshow("Dialation", dialation);
+	
+	
+	// Mat EQImg = EqHist(gray);
+	// imshow("EQ Grey image", EQImg);
+	// auto binary = GrayToBinary(gray);
+	// imshow("binary Image", binary);
+
+	// auto inversion = GrayInversion(gray);
+	// imshow("gray Image Inverted", inversion);
+
+	// auto step = GrayStep(gray);
+	// imshow("gray Image Step", step);
+
+	// auto max = Max(gray, 3);
+	// imshow("gray Image Max", max);
 
 
 	Mat DilatedImgCpy;
@@ -439,15 +524,15 @@ int main()
 	findContours(dialation, contours1, hierachy1, RETR_EXTERNAL, CHAIN_APPROX_NONE, Point(0, 0));
 	Mat dst = Mat::zeros(gray.size(), CV_8UC3);
 
-	if (!contours1.empty())
-	{
-		for (int i = 0; i < contours1.size(); i++)
-		{
-			Scalar colour((rand() & 255), (rand() & 255), (rand() & 255));
-			drawContours(dst, contours1, i, colour, -1, 8, hierachy1);
-		}
-	}
-	imshow("Segmented Image", dst);
+	// if (!contours1.empty())
+	// {
+	// 	for (int i = 0; i < contours1.size(); i++)
+	// 	{
+	// 		Scalar colour((rand() & 255), (rand() & 255), (rand() & 255));
+	// 		drawContours(dst, contours1, i, colour, -1, 8, hierachy1);
+	// 	}
+	// }
+	// imshow("Segmented Image", dst);
 	
 	
 
@@ -461,9 +546,9 @@ int main()
 		auto ratio = (float)rect.width / (float)rect.height;
 
 		auto tooTall = rect.height > 100;
-		auto tooWide = rect.width < 50 || rect.width > 400;
-		auto  outsideFocusX = rect.x < 0.1 * DilatedImgCpy.cols || rect.x > 0.9 * DilatedImgCpy.cols;
-		auto  outsideFocusY = rect.y < 0.1 * DilatedImgCpy.rows || rect.y > 0.9 * DilatedImgCpy.rows;
+		auto tooWide = rect.width < 70 || rect.width > 400;
+		auto  outsideFocusX = rect.x < 0.15 * DilatedImgCpy.cols || rect.x > 0.85 * DilatedImgCpy.cols;
+		auto  outsideFocusY = rect.y < 0.3 * DilatedImgCpy.rows || rect.y > 0.85 * DilatedImgCpy.rows;
 		if ( tooTall || tooWide|| outsideFocusX || outsideFocusY || ratio < 1.5f)
 		{
 			drawContours(DilatedImgCpy, contours1, i, black, -1, 8, hierachy1);
@@ -480,6 +565,10 @@ int main()
 	if (plate.cols != 0 && plate.rows != 0)
 		imshow("detected plate", plate);
 
+
+
+	
+	
 	waitKey();
 	std::cout << "Hello World!\n";
 }
