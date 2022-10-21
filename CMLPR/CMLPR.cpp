@@ -506,7 +506,7 @@ float WhiteToBlackRatio(Mat image)
 // 10, 20
 int main()
 {
-	Mat image = imread("..\\Dataset\\20.jpg");
+	Mat image = imread("..\\Dataset\\10.jpg");
 
 	Mat gray = RGBToGray(image);
 	imshow("Grey image", gray);
@@ -574,6 +574,7 @@ int main()
 
 	Rect rect;
 	Mat plate;
+	vector<Mat> plates;
 	Scalar black = CV_RGB(0, 0, 0);
 	for (int i = 0; i < contours1.size(); i++)
 	{
@@ -593,16 +594,26 @@ int main()
 		else
 		{
 			plate = gray(rect);
+			plates.push_back(plate);
 		}
-
 	}
 
 	imshow("Filtered Image", DilatedImgCpy);
+	// if (plate.cols != 0 && plate.rows != 0)
+	// 	imshow("detected plate", plate);
 
-	if (plate.cols != 0 && plate.rows != 0)
-		imshow("detected plate", plate);
-
-
+	if (plates.size() == 0)
+	{
+		// Run image again with a different configuration
+	}
+	else
+	{
+		for (int i = 0; i < plates.size(); ++i)
+		{
+			imshow(string("detected plate " + i), plates[i]);
+			// Send to tesseract
+		}
+	}
 
 	
 	
