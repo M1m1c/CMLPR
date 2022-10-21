@@ -482,14 +482,35 @@ void showAll()
 	}
 
 }
-// 8, 10, 16, 20
+
+float WhiteToBlackRatio(Mat image)
+{
+	float sum = 0;
+	float pixels = image.rows * image.cols;
+	
+	for (int i = 0; i < image.rows; ++i)
+	{
+		for (int j = 0; j < image.cols; ++j)
+		{
+			int value = image.at<uchar>(i, j);
+			if (value == 255)
+			{
+				sum++;
+			}
+		}
+	}
+	// std::cout << sum/pixels << " ";
+	return sum / pixels;
+}
+
+// 10, 20
 int main()
 {
-	Mat image = imread("..\\Dataset\\8.jpg");
+	Mat image = imread("..\\Dataset\\20.jpg");
 
 	Mat gray = RGBToGray(image);
 	imshow("Grey image", gray);
-
+	
 	if (gray.cols > 1600)
 	{
 		Mat compressed = Mat::zeros(image.rows/2, image.cols/2, CV_8UC1);
@@ -557,14 +578,15 @@ int main()
 	for (int i = 0; i < contours1.size(); i++)
 	{
 		rect = boundingRect(contours1[i]);
+		float wBRatio = WhiteToBlackRatio(DilatedImgCpy(rect));
 
+		bool tooMuchBlack = wBRatio <= 0.6f;
 		auto ratio = (float)rect.width / (float)rect.height;
-
 		auto tooTall = rect.height > 100;
-		auto tooWide = rect.width < 70 || rect.width > 400;
-		auto  outsideFocusX = rect.x < 0.15 * DilatedImgCpy.cols || rect.x > 0.85 * DilatedImgCpy.cols;
-		auto  outsideFocusY = rect.y < 0.3 * DilatedImgCpy.rows || rect.y > 0.9 * DilatedImgCpy.rows;
-		if ( tooTall || tooWide|| outsideFocusX || outsideFocusY || ratio < 1.5f)
+		auto wrongWidth = rect.width < 52 || rect.width > 400;
+		auto outsideFocusX = rect.x < 0.15 * DilatedImgCpy.cols || rect.x > 0.85 * DilatedImgCpy.cols;
+		auto outsideFocusY = rect.y < 0.3 * DilatedImgCpy.rows || rect.y > 0.9 * DilatedImgCpy.rows;
+		if ( tooTall || wrongWidth|| outsideFocusX || outsideFocusY || ratio < 1.5f || tooMuchBlack)
 		{
 			drawContours(DilatedImgCpy, contours1, i, black, -1, 8, hierachy1);
 		}
