@@ -481,7 +481,7 @@ void showAll()
 	}
 
 }
-// 8, 10, 14, 16, 18, 20
+// 8, 10, 16, 18, 20
 int main()
 {
 	Mat image = imread("..\\Dataset\\20.jpg");
@@ -548,7 +548,7 @@ int main()
 		auto tooTall = rect.height > 100;
 		auto tooWide = rect.width < 70 || rect.width > 400;
 		auto  outsideFocusX = rect.x < 0.15 * DilatedImgCpy.cols || rect.x > 0.85 * DilatedImgCpy.cols;
-		auto  outsideFocusY = rect.y < 0.3 * DilatedImgCpy.rows || rect.y > 0.85 * DilatedImgCpy.rows;
+		auto  outsideFocusY = rect.y < 0.3 * DilatedImgCpy.rows || rect.y > 0.9 * DilatedImgCpy.rows;
 		if ( tooTall || tooWide|| outsideFocusX || outsideFocusY || ratio < 1.5f)
 		{
 			drawContours(DilatedImgCpy, contours1, i, black, -1, 8, hierachy1);
