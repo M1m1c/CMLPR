@@ -179,6 +179,33 @@ Mat Avg(Mat Grey, int neighbirSize)
 	return AvgImg;
 }
 
+Mat Blur(Mat Grey, int neighbourSize, float neighbourWeight = 1.f) {
+	Mat blurImg = Mat::zeros(Grey.size(), CV_8UC1);
+
+	int totalPix = pow(2 * neighbourSize + 1, 2);
+	for (int i = neighbourSize; i < Grey.rows - neighbourSize; i++)
+	{
+		for (int j = neighbourSize; j < Grey.cols - neighbourSize; j++)
+		{
+			int sum = 0;
+			int count = 0;
+			for (int ii = -neighbourSize; ii <= neighbourSize; ii++)
+			{
+				for (int jj = -neighbourSize; jj <= neighbourSize; jj++)
+				{
+					count++;
+					sum += (int)(Grey.at<uchar>(i + ii, j + jj) * neighbourWeight);
+				}
+			}
+			sum -= (int)(Grey.at<uchar>(i, j) * (neighbourWeight));
+			sum += (int)(Grey.at<uchar>(i, j) * (1 - neighbourWeight) * count);
+			blurImg.at<uchar>(i, j) = sum / count;
+		}
+	}
+
+	return blurImg;
+}
+
 Mat Max(Mat Grey, int neighbirSize)
 {
 	Mat img = Mat::zeros(Grey.size(), CV_8UC1);
@@ -258,9 +285,9 @@ Mat Dialation(Mat edge, int neighbirSize)
 		{
 			bool shouldBreak = false;
 
-			for (int ii = -4; ii <= 4; ii++)
+			for (int ii = -neighbirSize; ii < neighbirSize; ii++)
 			{
-				for (int jj = -neighbirSize; jj <= neighbirSize; jj++)
+				for (int jj = -neighbirSize; jj < neighbirSize; jj++)
 				{
 					auto isNeighbourWhite = edge.at<uchar>(i + ii, j + jj) == 255;
 					if (isNeighbourWhite)
@@ -319,10 +346,39 @@ Mat Erosion(Mat edge, int neighbirSize)
 	return erosion;
 }
 
-Mat EraseBorder(Mat edge, int borderX, int borderY)
+Mat ErosionOpt(Mat Edge, int windowsize) {
+	Mat ErodedImg = Mat::zeros(Edge.size(), CV_8UC1);
+	for (int i = windowsize; i < Edge.rows - windowsize; i++) {
+		for (int j = windowsize; j < Edge.cols - windowsize; j++) {
+			ErodedImg.at<uchar>(i, j) = Edge.at<uchar>(i, j);
+			for (int p = -windowsize; p <= windowsize; p++) {
+				for (int q = -windowsize; q <= windowsize; q++) {
+					if (Edge.at<uchar>(i + p, j + q) == 0) {
+						ErodedImg.at<uchar>(i, j) = 0;
+
+					}
+				}
+			}
+		}
+	}
+	return ErodedImg;
+}
+
+Mat AddBorder(Mat edge, int borderX, int borderY)
 {
 
 	Mat retImg = Mat::zeros(edge.size(), CV_8UC1);
+
+
+	for (int i = 0; i < edge.rows; i++)
+	{
+		for (int j = 0; j < edge.cols; j++)
+		{
+
+			retImg.at<uchar>(i, j) = 255;
+
+		}
+	}
 
 	for (int i = borderY; i < edge.rows - borderY; i++)
 	{
@@ -338,24 +394,24 @@ Mat EraseBorder(Mat edge, int borderX, int borderY)
 }
 
 
-int ContrastValue(int value)
+int ContrastValue(int value, float intensity = 3.5f)
 {
 	float f = value;
 	f /= 255.f;
 
-	f = pow(f, 3.5f);
+	f = pow(f, intensity);
 	f *= 255.f;
 	return (int)f;
 }
 
-Mat ContrastImg(Mat img)
+Mat ContrastImg(Mat img, float intensity = 3.5f)
 {
 	Mat retval = Mat::zeros(img.size(), CV_8UC1);
 	for (int i = 0; i < img.rows; i++)
 	{
 		for (int j = 0; j < img.cols; j++)
 		{
-			int val = ContrastValue(img.at<uchar>(i, j));
+			int val = ContrastValue(img.at<uchar>(i, j), intensity);
 			img.at<uchar>(i, j) = val;
 		}
 	}
@@ -580,33 +636,73 @@ Mat LocateLicensePlate(Mat image)
 	return plate;
 }
 
-string ProcessLicensePlate(Mat plate, int i)
+
+Mat UpScaleImage(Mat img)
+{
+	Mat reSizeImg = Mat::zeros(img.size() * 2, CV_8UC1);
+
+	for (size_t i = 0; i < img.rows; i++)
+	{
+		for (size_t j = 0; j < img.cols; j++)
+		{
+			int ii = i * 2;
+			int jj = j * 2;
+			reSizeImg.at<uchar>(ii, jj) = img.at<uchar>(i, j);
+			reSizeImg.at<uchar>(ii + 1, jj) = img.at<uchar>(i, j);
+			reSizeImg.at<uchar>(ii, jj + 1) = img.at<uchar>(i, j);
+			reSizeImg.at<uchar>(ii + 1, jj - 1) = img.at<uchar>(i, j);
+		}
+	}
+	return reSizeImg;
+}
+
+Mat PlateOperation1(Mat plate)
+{
+	plate = UpScaleImage(plate);
+	plate = ContrastImg(plate);
+	plate = Blur(plate, 1, 0.2f);
+
+	plate = GrayToBinary(plate);
+
+	plate = AddBorder(plate, ((float)plate.cols * 0.02f), ((float)plate.rows * 0.05f));
+
+	return plate;
+}
+
+Mat PlateOperation2(Mat plate)
+{
+	plate = GrayInversion(plate);
+	plate = Erosion(plate, 1);
+	plate = Erosion(plate, 1);
+
+	return plate;
+}
+
+Mat PlateOperation3(Mat plate)
+{
+	plate = GrayInversion(plate);
+	plate = ErosionOpt(plate, 1);
+	plate = Dialation(plate, 1);
+	plate = GrayInversion(plate);
+
+	return plate;
+}
+
+string ProcessLicensePlate(Mat plate, int index)
 {
 	string str = "NO LETTERS DETECTED!";
 
-	//TODO linear remapping
-
-	plate = ContrastImg(plate);
-	imshow("funcPlate", plate);
-
-	//plate = EqHist(plate);
-
-	int OTSUTH = OTSU(plate);
-
-	Mat BinPlate = GrayToBinary(plate, OTSUTH);
-
-	BinPlate = EraseBorder(BinPlate, ((float)BinPlate.cols * 0.05f), ((float)BinPlate.rows * 0.20f));
-	
-
-	//BinPlate = Dialation(BinPlate, 1);
-	//imshow("BinPlate", BinPlate);
-	imshow(to_string(i + 1), BinPlate);
+	imshow(to_string(index + 1), plate);
 	tesseract::TessBaseAPI* api = new tesseract::TessBaseAPI();
 
 	api->Init("..\\tessdata", "eng");
 
-	cvtColor(BinPlate, BinPlate, COLOR_BGR2BGRA);
-	api->SetImage(BinPlate.data, BinPlate.cols, BinPlate.rows, 4, 4 * BinPlate.cols);
+	//api->SetPageSegMode(tesseract::PageSegMode::PSM_SINGLE_BLOCK);
+
+	api->SetVariable("tessedit_char_whitelist", "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789");
+
+	cvtColor(plate, plate, COLOR_BGR2BGRA);
+	api->SetImage(plate.data, plate.cols, plate.rows, 4, 4 * plate.cols);
 
 	char* outText = api->GetUTF8Text();
 	if (outText != nullptr)
@@ -624,6 +720,7 @@ string ProcessLicensePlate(Mat plate, int i)
 		str.erase(remove(str.begin(), str.end(), '"'), str.end());
 		str.erase(remove(str.begin(), str.end(), '_'), str.end());
 		str.erase(remove(str.begin(), str.end(), '	'), str.end());
+		str.erase(remove(str.begin(), str.end(), '\n'), str.end());
 	}
 	api->End();
 	delete[] outText;
@@ -658,17 +755,58 @@ int main()
 	images[19] = imread("..\\Dataset\\20.jpg");
 
 
+	vector<string> plateText{
+		"CBC6466",
+		"NAV5969",
+		"WA5008C",
+		"WCV9605",
+		"RK8255",
+		"BDF1490",
+		"W3701V",
+		"PGE523",
+		"WGD2542",
+		"WWP9229",
+		"BHM9492",
+		"BKQ9784",
+		"WXA2198",
+		"WSY8789",
+		"WVM757",
+		"WWQ3817",
+		"JLP911",
+		"A550RGY",
+		"WRP525",
+		"AHD6131"
+	};
+
+
+	std::vector<Mat(*)(Mat)> plateOperations{ &PlateOperation1,&PlateOperation2,&PlateOperation3 };
+
+	int correctPlatesFound = 0;
 	for (size_t i = 0; i < 20; i++)
 	{
 		Mat plate = LocateLicensePlate(images[i]);
 		string str = "PLATE NOT FOUND!";
+		string match = " not a match!";
+
 		if (plate.cols != 0 && plate.rows != 0)
 		{
-			str = ProcessLicensePlate(plate, i);
-			//imshow(to_string(i+1), plate);
+			auto count = 0;
+			for (size_t j = 0; j < plateOperations.size(); j++)
+			{
+				plate = plateOperations[j](plate);
+				str = ProcessLicensePlate(plate, i);
+
+				if (str == plateText[i])
+				{
+					match = "---> FOUND MATCH";
+					correctPlatesFound++;
+					break;
+				}
+			}
 		}
-		cout << i+1 << ": " << str << endl;//ProcessLicensePlate(plate);
+		cout << i + 1 << ": " << str << match << "\n" << endl;
 	}
+	cout << "Found " << correctPlatesFound << " /20" << endl;
 
 	//Mat image = imread("..\\Dataset\\2.jpg");
 
@@ -681,6 +819,7 @@ int main()
 	waitKey();
 	std::cout << "Hello World!\n";
 }
+
 
 // Run program: Ctrl + F5 or Debug > Start Without Debugging menu
 // Debug program: F5 or Debug > Start Debugging menu
