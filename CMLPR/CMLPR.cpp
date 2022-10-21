@@ -1,5 +1,3 @@
-// CMLPR.cpp : This file contains the 'main' function. Program execution begins and ends there.
-//
 
 #include <iostream>
 #include <baseapi.h>
@@ -49,7 +47,6 @@ Mat RGBToBinary(Mat rgb, int threshold = 128)
 
 			if (result > threshold)
 				binary.at<uchar>(i, j / stride) = 255;
-			//binary.at<uchar>(i, j / stride) = result > 128 ? 255 : 0;
 		}
 	}
 
@@ -66,7 +63,6 @@ Mat GrayToBinary(Mat gray, int threshold = 128)
 		{
 			if (gray.at<uchar>(i, j) > threshold)
 				binary.at<uchar>(i, j) = 255;
-			//binary.at<uchar>(i, j) = gray.at<uchar>(i, j) > 128 ? 255 : 0;
 		}
 	}
 
@@ -154,19 +150,19 @@ Mat AverageNxN(Mat gray, int n)
 	return average;
 }
 
-Mat Avg(Mat Grey, int neighbirSize)
+Mat Avg(Mat Grey, int neighbourSize)
 {
 	Mat AvgImg = Mat::zeros(Grey.size(), CV_8UC1);
-	int totalPix = pow(2 * neighbirSize + 1, 2);
-	for (int i = neighbirSize; i < Grey.rows - neighbirSize; i++)
+	int totalPix = pow(2 * neighbourSize + 1, 2);
+	for (int i =neighbourSize; i < Grey.rows -neighbourSize; i++)
 	{
-		for (int j = neighbirSize; j < Grey.cols - neighbirSize; j++)
+		for (int j =neighbourSize; j < Grey.cols -neighbourSize; j++)
 		{
 			int sum = 0;
 			int count = 0;
-			for (int ii = -neighbirSize; ii <= neighbirSize; ii++)
+			for (int ii = -neighbourSize; ii <=neighbourSize; ii++)
 			{
-				for (int jj = -neighbirSize; jj <= neighbirSize; jj++)
+				for (int jj = -neighbourSize; jj <=neighbourSize; jj++)
 				{
 					count++;
 					sum += Grey.at<uchar>(i + ii, j + jj);
@@ -206,17 +202,17 @@ Mat Blur(Mat Grey, int neighbourSize, float neighbourWeight = 1.f) {
 	return blurImg;
 }
 
-Mat Max(Mat Grey, int neighbirSize)
+Mat Max(Mat Grey, int neighbourSize)
 {
 	Mat img = Mat::zeros(Grey.size(), CV_8UC1);
-	for (int i = neighbirSize; i < Grey.rows - neighbirSize; i++)
+	for (int i = neighbourSize; i < Grey.rows -neighbourSize; i++)
 	{
-		for (int j = neighbirSize; j < Grey.cols - neighbirSize; j++)
+		for (int j =neighbourSize; j < Grey.cols -neighbourSize; j++)
 		{
 			int max = -1;
-			for (int ii = -neighbirSize; ii <= neighbirSize; ii++)
+			for (int ii = -neighbourSize; ii <=neighbourSize; ii++)
 			{
-				for (int jj = -neighbirSize; jj <= neighbirSize; jj++)
+				for (int jj = -neighbourSize; jj <=neighbourSize; jj++)
 				{
 					int pixel = Grey.at<uchar>(i + ii, j + jj);
 					if (pixel > max)
@@ -229,17 +225,17 @@ Mat Max(Mat Grey, int neighbirSize)
 	return img;
 }
 
-Mat Min(Mat Grey, int neighbirSize)
+Mat Min(Mat Grey, int neighbourSize)
 {
 	Mat img = Mat::zeros(Grey.size(), CV_8UC1);
-	for (int i = neighbirSize; i < Grey.rows - neighbirSize; i++)
+	for (int i =neighbourSize; i < Grey.rows -neighbourSize; i++)
 	{
-		for (int j = neighbirSize; j < Grey.cols - neighbirSize; j++)
+		for (int j =neighbourSize; j < Grey.cols -neighbourSize; j++)
 		{
 			int min = 255;
-			for (int ii = -neighbirSize; ii <= neighbirSize; ii++)
+			for (int ii = -neighbourSize; ii <=neighbourSize; ii++)
 			{
-				for (int jj = -neighbirSize; jj <= neighbirSize; jj++)
+				for (int jj = -neighbourSize; jj <=neighbourSize; jj++)
 				{
 					int pixel = Grey.at<uchar>(i + ii, j + jj);
 					if (pixel < min)
@@ -274,20 +270,20 @@ Mat Edge(Mat Grey, int th)
 }
 
 
-Mat Dialation(Mat edge, int neighbirSize)
+Mat Dialation(Mat edge, int neighbourSize)
 {
 
 	Mat dialation = Mat::zeros(edge.size(), CV_8UC1);
 
-	for (int i = neighbirSize; i < edge.rows - neighbirSize; i++)
+	for (int i =neighbourSize; i < edge.rows -neighbourSize; i++)
 	{
-		for (int j = neighbirSize; j < edge.cols - neighbirSize; j++)
+		for (int j =neighbourSize; j < edge.cols -neighbourSize; j++)
 		{
 			bool shouldBreak = false;
 
-			for (int ii = -neighbirSize; ii < neighbirSize; ii++)
+			for (int ii = -neighbourSize; ii <neighbourSize; ii++)
 			{
-				for (int jj = -neighbirSize; jj < neighbirSize; jj++)
+				for (int jj = -neighbourSize; jj <neighbourSize; jj++)
 				{
 					auto isNeighbourWhite = edge.at<uchar>(i + ii, j + jj) == 255;
 					if (isNeighbourWhite)
@@ -307,34 +303,30 @@ Mat Dialation(Mat edge, int neighbirSize)
 	return dialation;
 }
 
-Mat Erosion(Mat edge, int neighbirSize)
+Mat ErosionWithLimit(Mat edge, int neighbourSize)
 {
 
 	Mat erosion = Mat::zeros(edge.size(), CV_8UC1);
 
-	for (int i = neighbirSize; i < edge.rows - neighbirSize; i++)
+	for (int i = neighbourSize; i < edge.rows - neighbourSize; i++)
 	{
-		for (int j = neighbirSize; j < edge.cols - neighbirSize; j++)
+		for (int j = neighbourSize; j < edge.cols - neighbourSize; j++)
 		{
 			int blackNeighbors = 0;
 			erosion.at<uchar>(i, j) = edge.at<uchar>(i, j);
 			bool shouldBreak = false;
 
-			for (int ii = -neighbirSize; ii <= neighbirSize; ii++)
+			for (int ii = -neighbourSize; ii <= neighbourSize; ii++)
 			{
-				for (int jj = -neighbirSize; jj <= neighbirSize; jj++)
+				for (int jj = -neighbourSize; jj <= neighbourSize; jj++)
 				{
 					auto isNeighbourBlack = edge.at<uchar>(i + ii, j + jj) == 0;
 					if (isNeighbourBlack)
 					{
 						blackNeighbors++;
-						// erosion.at<uchar>(i, j) = 0;
-						// shouldBreak = true;
-						// break;
+					
 					}
-
 				}
-				// if (shouldBreak) { break; }
 			}
 			if (blackNeighbors > 3)
 			{
@@ -346,7 +338,7 @@ Mat Erosion(Mat edge, int neighbirSize)
 	return erosion;
 }
 
-Mat ErosionOpt(Mat Edge, int windowsize) {
+Mat ErosionHomam(Mat Edge, int windowsize) {
 	Mat ErodedImg = Mat::zeros(Edge.size(), CV_8UC1);
 	for (int i = windowsize; i < Edge.rows - windowsize; i++) {
 		for (int j = windowsize; j < Edge.cols - windowsize; j++) {
@@ -500,36 +492,19 @@ int OTSU(Mat Grey)
 
 	return index + 30;
 }
+
 void showAll()
 {
-	Mat images[20];
-	images[0] = imread("..\\Dataset\\1.jpg");
-	images[1] = imread("..\\Dataset\\2.jpg");
-	images[2] = imread("..\\Dataset\\3.jpg");
-	images[3] = imread("..\\Dataset\\4.jpg");
-	images[4] = imread("..\\Dataset\\5.jpg");
-	images[5] = imread("..\\Dataset\\6.jpg");
-	images[6] = imread("..\\Dataset\\7.jpg");
-	images[7] = imread("..\\Dataset\\8.jpg");
-	images[8] = imread("..\\Dataset\\9.jpg");
-	images[9] = imread("..\\Dataset\\10.jpg");
-	images[10] = imread("..\\Dataset\\11.jpg");
-	images[11] = imread("..\\Dataset\\12.jpg");
-	images[12] = imread("..\\Dataset\\13.jpg");
-	images[13] = imread("..\\Dataset\\14.jpg");
-	images[14] = imread("..\\Dataset\\15.jpg");
-	images[15] = imread("..\\Dataset\\16.jpg");
-	images[16] = imread("..\\Dataset\\17.jpg");
-	images[17] = imread("..\\Dataset\\18.jpg");
-	images[18] = imread("..\\Dataset\\19.jpg");
-	images[19] = imread("..\\Dataset\\20.jpg");
+	vector<Mat> images;
+	for (int i = 1; i < 21; i++)
+	{
+		images.push_back(imread(format("..\\Dataset\\%d.jpg", i)));
+	}
 
 	Mat img;
 	img = imread("..\\Dataset\\8.jpg");
-	// imshow("RGB Image", img);
 
 	auto gray = RGBToGray(img);
-	// imshow("gray Image", gray);
 
 	for (int i = 0; i < 20; i++)
 	{
@@ -537,7 +512,7 @@ void showAll()
 		image = RGBToGray(image);
 		Mat avg = AverageNxN(image, 1);
 		Mat edge = Edge(avg, 50);
-		Mat eroded = Erosion(edge, 1);
+		Mat eroded = ErosionWithLimit(edge, 1);
 		Mat dilated = Dialation(eroded, 5);
 
 		Mat DilatedImgCpy;
@@ -572,7 +547,6 @@ void showAll()
 		}
 		string title = std::to_string(i);
 		imshow(title, dilated);
-		// imshow("Filtered Image ", DilatedImgCpy);
 
 		title += title;
 		if (plate.cols != 0 && plate.rows != 0)
@@ -585,21 +559,14 @@ Mat LocateLicensePlate(Mat image)
 {
 
 	Mat gray = RGBToGray(image);
-	//imshow("Grey image", gray);
 
 	auto average = AverageNxN(gray, 1);
-	// imshow("gray Image average", average);
 
 	auto edge = Edge(average, 50);
-	//imshow("Edge", edge);
 
-	auto erosion = Erosion(edge, 1);
-	//imshow("Erosion", erosion);
+	auto erosion = ErosionWithLimit(edge, 1);
 
 	auto dialation = Dialation(erosion, 5);
-	//imshow("Dialation", dialation);
-
-
 
 	Mat DilatedImgCpy;
 	DilatedImgCpy = dialation.clone();
@@ -672,8 +639,8 @@ Mat PlateOperation1(Mat plate)
 Mat PlateOperation2(Mat plate)
 {
 	plate = GrayInversion(plate);
-	plate = Erosion(plate, 1);
-	plate = Erosion(plate, 1);
+	plate = ErosionWithLimit(plate, 1);
+	plate = ErosionWithLimit(plate, 1);
 
 	return plate;
 }
@@ -681,7 +648,7 @@ Mat PlateOperation2(Mat plate)
 Mat PlateOperation3(Mat plate)
 {
 	plate = GrayInversion(plate);
-	plate = ErosionOpt(plate, 1);
+	plate = ErosionHomam(plate, 1);
 	plate = Dialation(plate, 1);
 	plate = GrayInversion(plate);
 
@@ -696,8 +663,6 @@ string ProcessLicensePlate(Mat plate, int index)
 	tesseract::TessBaseAPI* api = new tesseract::TessBaseAPI();
 
 	api->Init("..\\tessdata", "eng");
-
-	//api->SetPageSegMode(tesseract::PageSegMode::PSM_SINGLE_BLOCK);
 
 	api->SetVariable("tessedit_char_whitelist", "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789");
 
@@ -728,61 +693,43 @@ string ProcessLicensePlate(Mat plate, int index)
 	return toUpperCase(str);
 }
 
-// 8, 10, 14, 16, 18, 20
 int main()
 {
 
-	Mat images[20];
-	images[0] = imread("..\\Dataset\\1.jpg");
-	images[1] = imread("..\\Dataset\\2.jpg");
-	images[2] = imread("..\\Dataset\\3.jpg");
-	images[3] = imread("..\\Dataset\\4.jpg");
-	images[4] = imread("..\\Dataset\\5.jpg");
-	images[5] = imread("..\\Dataset\\6.jpg");
-	images[6] = imread("..\\Dataset\\7.jpg");
-	images[7] = imread("..\\Dataset\\8.jpg");
-	images[8] = imread("..\\Dataset\\9.jpg");
-	images[9] = imread("..\\Dataset\\10.jpg");
-	images[10] = imread("..\\Dataset\\11.jpg");
-	images[11] = imread("..\\Dataset\\12.jpg");
-	images[12] = imread("..\\Dataset\\13.jpg");
-	images[13] = imread("..\\Dataset\\14.jpg");
-	images[14] = imread("..\\Dataset\\15.jpg");
-	images[15] = imread("..\\Dataset\\16.jpg");
-	images[16] = imread("..\\Dataset\\17.jpg");
-	images[17] = imread("..\\Dataset\\18.jpg");
-	images[18] = imread("..\\Dataset\\19.jpg");
-	images[19] = imread("..\\Dataset\\20.jpg");
-
-
+	vector<Mat> images;
+	for (int i = 1; i < 21; i++)
+	{
+		images.push_back(imread(format("..\\Dataset\\%d.jpg", i)));
+	}
+	
 	vector<string> plateText{
-		"CBC6466",
-		"NAV5969",
-		"WA5008C",
-		"WCV9605",
-		"RK8255",
-		"BDF1490",
-		"W3701V",
-		"PGE523",
-		"WGD2542",
-		"WWP9229",
-		"BHM9492",
-		"BKQ9784",
-		"WXA2198",
-		"WSY8789",
-		"WVM757",
-		"WWQ3817",
-		"JLP911",
-		"A550RGY",
-		"WRP525",
-		"AHD6131"
+		"CBC6466",	//1
+		"NAV5969",	//2
+		"WA5008C",	//3
+		"WCV9605",	//4
+		"RK8255",	//5
+		"BDF1490",	//6
+		"W3701V",	//7
+		"PGE523",	//8
+		"WGD2542",	//9
+		"WWP9229",	//10
+		"BHM9492",	//11
+		"BKQ9784",	//12
+		"WXA2198",	//13
+		"WSY8789",	//14
+		"WVM757",	//15
+		"WWQ3817",	//16
+		"JLP911",	//17
+		"A550RGY",	//18
+		"WRP525",	//19
+		"AHD6131"	//20
 	};
 
 
 	std::vector<Mat(*)(Mat)> plateOperations{ &PlateOperation1,&PlateOperation2,&PlateOperation3 };
 
 	int correctPlatesFound = 0;
-	for (size_t i = 0; i < 20; i++)
+	for (size_t i = 0; i < images.size(); i++)
 	{
 		Mat plate = LocateLicensePlate(images[i]);
 		string str = "PLATE NOT FOUND!";
@@ -808,26 +755,5 @@ int main()
 	}
 	cout << "Found " << correctPlatesFound << " /20" << endl;
 
-	//Mat image = imread("..\\Dataset\\2.jpg");
-
-	//Mat plate = LocateLicensePlate(image);
-	//if (plate.cols != 0 && plate.rows != 0)
-	//{
-	//	cout << "OCR output:\n" << ProcessLicensePlate(plate);  //printf("OCR output:\n%s", str);
-	//}
-
 	waitKey();
-	std::cout << "Hello World!\n";
 }
-
-
-// Run program: Ctrl + F5 or Debug > Start Without Debugging menu
-// Debug program: F5 or Debug > Start Debugging menu
-
-// Tips for Getting Started: 
-//   1. Use the Solution Explorer window to add/manage files
-//   2. Use the Team Explorer window to connect to source control
-//   3. Use the Output window to see build output and other messages
-//   4. Use the Error List window to view errors
-//   5. Go to Project > Add New Item to create new code files, or Project > Add Existing Item to add existing code files to the project
-//   6. In the future, to open this project again, go to File > Open > Project and select the .sln file
