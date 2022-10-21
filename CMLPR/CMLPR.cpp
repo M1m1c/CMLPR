@@ -142,7 +142,7 @@ int GetSum(Mat& gray, int n, int i, int j)
 Mat AverageNxN(Mat gray, int n)
 {
 	Mat average = Mat::zeros(gray.size(), CV_8UC1);
-
+	
 	for (int i = 1; i < gray.rows - 1; i++)
 	{
 		for (int j = 1; j < gray.cols - 1; j++)
@@ -228,6 +228,7 @@ Mat Min(Mat Grey, int neighbirSize)
 Mat Edge(Mat Grey, int th)
 {
 	Mat EdgeImg = Mat::zeros(Grey.size(), CV_8UC1);
+	
 	for (int i = 1; i < Grey.rows - 1; i++)
 	{
 		for (int j = 1; j < Grey.cols - 1; j++)
@@ -481,13 +482,27 @@ void showAll()
 	}
 
 }
-// 8, 10, 16, 18, 20
+// 8, 10, 16, 20
 int main()
 {
-	Mat image = imread("..\\Dataset\\20.jpg");
+	Mat image = imread("..\\Dataset\\8.jpg");
 
 	Mat gray = RGBToGray(image);
 	imshow("Grey image", gray);
+
+	if (gray.cols > 1600)
+	{
+		Mat compressed = Mat::zeros(image.rows/2, image.cols/2, CV_8UC1);
+	
+		for (int i = 0, ii = 0; i < gray.rows; i+=2, ii++)
+		{
+			for (int j = 0, jj = 0; j < gray.cols; j+=2, jj++)
+			{
+				compressed.at<uchar>(ii, jj) = gray.at<uchar>(i, j);
+			}
+		}
+		gray = compressed;
+	}
 	
 	auto average = AverageNxN(gray, 1);
 	// imshow("gray Image average", average);
