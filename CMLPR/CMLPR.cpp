@@ -154,15 +154,15 @@ Mat Avg(Mat Grey, int neighbourSize)
 {
 	Mat AvgImg = Mat::zeros(Grey.size(), CV_8UC1);
 	int totalPix = pow(2 * neighbourSize + 1, 2);
-	for (int i =neighbourSize; i < Grey.rows -neighbourSize; i++)
+	for (int i = neighbourSize; i < Grey.rows - neighbourSize; i++)
 	{
-		for (int j =neighbourSize; j < Grey.cols -neighbourSize; j++)
+		for (int j = neighbourSize; j < Grey.cols - neighbourSize; j++)
 		{
 			int sum = 0;
 			int count = 0;
-			for (int ii = -neighbourSize; ii <=neighbourSize; ii++)
+			for (int ii = -neighbourSize; ii <= neighbourSize; ii++)
 			{
-				for (int jj = -neighbourSize; jj <=neighbourSize; jj++)
+				for (int jj = -neighbourSize; jj <= neighbourSize; jj++)
 				{
 					count++;
 					sum += Grey.at<uchar>(i + ii, j + jj);
@@ -205,14 +205,14 @@ Mat Blur(Mat Grey, int neighbourSize, float neighbourWeight = 1.f) {
 Mat Max(Mat Grey, int neighbourSize)
 {
 	Mat img = Mat::zeros(Grey.size(), CV_8UC1);
-	for (int i = neighbourSize; i < Grey.rows -neighbourSize; i++)
+	for (int i = neighbourSize; i < Grey.rows - neighbourSize; i++)
 	{
-		for (int j =neighbourSize; j < Grey.cols -neighbourSize; j++)
+		for (int j = neighbourSize; j < Grey.cols - neighbourSize; j++)
 		{
 			int max = -1;
-			for (int ii = -neighbourSize; ii <=neighbourSize; ii++)
+			for (int ii = -neighbourSize; ii <= neighbourSize; ii++)
 			{
-				for (int jj = -neighbourSize; jj <=neighbourSize; jj++)
+				for (int jj = -neighbourSize; jj <= neighbourSize; jj++)
 				{
 					int pixel = Grey.at<uchar>(i + ii, j + jj);
 					if (pixel > max)
@@ -228,14 +228,14 @@ Mat Max(Mat Grey, int neighbourSize)
 Mat Min(Mat Grey, int neighbourSize)
 {
 	Mat img = Mat::zeros(Grey.size(), CV_8UC1);
-	for (int i =neighbourSize; i < Grey.rows -neighbourSize; i++)
+	for (int i = neighbourSize; i < Grey.rows - neighbourSize; i++)
 	{
-		for (int j =neighbourSize; j < Grey.cols -neighbourSize; j++)
+		for (int j = neighbourSize; j < Grey.cols - neighbourSize; j++)
 		{
 			int min = 255;
-			for (int ii = -neighbourSize; ii <=neighbourSize; ii++)
+			for (int ii = -neighbourSize; ii <= neighbourSize; ii++)
 			{
-				for (int jj = -neighbourSize; jj <=neighbourSize; jj++)
+				for (int jj = -neighbourSize; jj <= neighbourSize; jj++)
 				{
 					int pixel = Grey.at<uchar>(i + ii, j + jj);
 					if (pixel < min)
@@ -275,15 +275,15 @@ Mat Dialation(Mat edge, int neighbourSize)
 
 	Mat dialation = Mat::zeros(edge.size(), CV_8UC1);
 
-	for (int i =neighbourSize; i < edge.rows -neighbourSize; i++)
+	for (int i = neighbourSize; i < edge.rows - neighbourSize; i++)
 	{
-		for (int j =neighbourSize; j < edge.cols -neighbourSize; j++)
+		for (int j = neighbourSize; j < edge.cols - neighbourSize; j++)
 		{
 			bool shouldBreak = false;
 
-			for (int ii = -neighbourSize; ii <neighbourSize; ii++)
+			for (int ii = -neighbourSize; ii < neighbourSize; ii++)
 			{
-				for (int jj = -neighbourSize; jj <neighbourSize; jj++)
+				for (int jj = -neighbourSize; jj < neighbourSize; jj++)
 				{
 					auto isNeighbourWhite = edge.at<uchar>(i + ii, j + jj) == 255;
 					if (isNeighbourWhite)
@@ -324,7 +324,7 @@ Mat ErosionWithLimit(Mat edge, int neighbourSize)
 					if (isNeighbourBlack)
 					{
 						blackNeighbors++;
-					
+
 					}
 				}
 			}
@@ -555,10 +555,43 @@ void showAll()
 
 }
 
+float WhiteToBlackRatio(Mat image)
+{
+	float sum = 0;
+	float pixels = image.rows * image.cols;
+
+	for (int i = 0; i < image.rows; ++i)
+	{
+		for (int j = 0; j < image.cols; ++j)
+		{
+			int value = image.at<uchar>(i, j);
+			if (value == 255)
+			{
+				sum++;
+			}
+		}
+	}
+	return sum / pixels;
+}
+
 Mat LocateLicensePlate(Mat image)
 {
 
 	Mat gray = RGBToGray(image);
+
+	if (gray.cols > 1600)
+	{
+		Mat compressed = Mat::zeros(image.rows / 2, image.cols / 2, CV_8UC1);
+
+		for (int i = 0, ii = 0; i < gray.rows; i += 2, ii++)
+		{
+			for (int j = 0, jj = 0; j < gray.cols; j += 2, jj++)
+			{
+				compressed.at<uchar>(ii, jj) = gray.at<uchar>(i, j);
+			}
+		}
+		gray = compressed;
+	}
 
 	auto average = AverageNxN(gray, 1);
 
@@ -567,6 +600,7 @@ Mat LocateLicensePlate(Mat image)
 	auto erosion = ErosionWithLimit(edge, 1);
 
 	auto dialation = Dialation(erosion, 5);
+
 
 	Mat DilatedImgCpy;
 	DilatedImgCpy = dialation.clone();
@@ -578,26 +612,28 @@ Mat LocateLicensePlate(Mat image)
 
 	Rect rect;
 	Mat plate;
+	vector<Mat> plates;
 	Scalar black = CV_RGB(0, 0, 0);
 	for (int i = 0; i < contours1.size(); i++)
 	{
 		rect = boundingRect(contours1[i]);
+		float wBRatio = WhiteToBlackRatio(DilatedImgCpy(rect));
 
+		bool tooMuchBlack = wBRatio <= 0.6f;
 		auto ratio = (float)rect.width / (float)rect.height;
-
 		auto tooTall = rect.height > 100;
-		auto tooWide = rect.width < 70 || rect.width > 400;
-		auto  outsideFocusX = rect.x < 0.15 * DilatedImgCpy.cols || rect.x > 0.85 * DilatedImgCpy.cols;
-		auto  outsideFocusY = rect.y < 0.3 * DilatedImgCpy.rows || rect.y > 0.85 * DilatedImgCpy.rows;
-		if (tooTall || tooWide || outsideFocusX || outsideFocusY || ratio < 1.5f)
+		auto wrongWidth = rect.width < 52 || rect.width > 400;
+		auto outsideFocusX = rect.x < 0.15 * DilatedImgCpy.cols || rect.x > 0.85 * DilatedImgCpy.cols;
+		auto outsideFocusY = rect.y < 0.3 * DilatedImgCpy.rows || rect.y > 0.9 * DilatedImgCpy.rows;
+		if (tooTall || wrongWidth || outsideFocusX || outsideFocusY || ratio < 1.5f || tooMuchBlack)
 		{
 			drawContours(DilatedImgCpy, contours1, i, black, -1, 8, hierachy1);
 		}
 		else
 		{
 			plate = gray(rect);
+			plates.push_back(plate);
 		}
-
 	}
 
 	return plate;
@@ -701,7 +737,7 @@ int main()
 	{
 		images.push_back(imread(format("..\\Dataset\\%d.jpg", i)));
 	}
-	
+
 	vector<string> plateText{
 		"CBC6466",	//1
 		"NAV5969",	//2
